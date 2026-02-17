@@ -3,7 +3,7 @@ import { AIConcept } from '../types';
 
 // Access the API key from environment variables (set in Vercel/Netlify).
 // We provide a dummy fallback to prevent the app from crashing during initialization if the key is missing.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "demo_fallback_key" });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY || "demo_fallback_key" });
 
 // MOCK DATA FOR DEMO FALLBACK
 // This ensures the client sees a result even if the API Key is missing or rate-limited.

@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom global styles */
+body {
+  font-family: 'Lato', sans-serif;
+  background-color: #fff1f2; /* rose-50 */
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: '"Playfair Display"', serif;
+}
+
+/* Scrollbar styling for chat */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

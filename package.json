@@ -7,10 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.96.0",
+    "@vercel/analytics": "^1.6.1",
     "lucide-react": "^0.566.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

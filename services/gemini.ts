@@ -1,13 +1,12 @@
 import { GoogleGenAI, Type, Chat } from "@google/genai";
 import { AIConcept } from '../types';
 
-// Use environment variable if available, otherwise use the provided hardcoded key for the demo.
-const API_KEY = process.env.API_KEY || "AIzaSyB3fzFCw0qlMDkd6i640zNTRU-wzatFvdU";
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+// Access the API key from environment variables (set in Vercel/Netlify).
+// We provide a dummy fallback to prevent the app from crashing during initialization if the key is missing.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "demo_fallback_key" });
 
 // MOCK DATA FOR DEMO FALLBACK
-// This ensures the client sees a result even if the API Key is invalid or rate-limited.
+// This ensures the client sees a result even if the API Key is missing or rate-limited.
 const MOCK_CONCEPT: AIConcept = {
   name: "Enchanted Forest Whispers",
   description: "A whimsical three-tier masterpiece covered in moss-green velvet texture, adorned with edible gold leaf, fondant woodland creatures, and sugar-spun fairy wings. The base layer features a tree-bark texture chocolate ganache.",
@@ -19,6 +18,9 @@ const MOCK_IMAGE = "https://images.unsplash.com/photo-1535254973040-607b474cb50d
 
 export const generateCakeConcept = async (userPrompt: string): Promise<AIConcept> => {
   try {
+    // If we are strictly using the fallback key (no env var), skip the network call and return mock data.
+    if (!process.env.API_KEY) throw new Error("No API Key configured");
+
     const model = "gemini-3-flash-preview";
     
     const systemInstruction = `
@@ -56,17 +58,19 @@ export const generateCakeConcept = async (userPrompt: string): Promise<AIConcept
     }
     throw new Error("Empty response");
   } catch (error) {
-    console.warn("API Error - Falling back to Mock Data", error);
+    console.warn("API Error or Missing Key - Using Mock Data for Demo", error);
     // Return mock data so the demo doesn't crash in front of the client
     return {
       ...MOCK_CONCEPT,
-      description: `[DEMO FALLBACK: API Error] ${MOCK_CONCEPT.description}`
+      description: `[DEMO MODE: API Unavailable] ${MOCK_CONCEPT.description}`
     };
   }
 };
 
 export const generateCakeImage = async (visualPrompt: string): Promise<string> => {
   try {
+    if (!process.env.API_KEY) throw new Error("No API Key configured");
+
     const model = "gemini-2.5-flash-image";
     
     const response = await ai.models.generateContent({
@@ -89,7 +93,7 @@ export const generateCakeImage = async (visualPrompt: string): Promise<string> =
     }
     throw new Error("No image data");
   } catch (error) {
-    console.warn("Image Gen Error - Using Mock Image", error);
+    console.warn("Image Gen Error - Using Mock Image for Demo", error);
     return MOCK_IMAGE;
   }
 };

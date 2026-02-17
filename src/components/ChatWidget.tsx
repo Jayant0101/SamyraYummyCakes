@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Loader2, Cake } from 'lucide-react';
-import { sendChatMessage } from '../services/gemini';
+import { sendChatMessage } from '../services/api';
 
 interface Message {
   id: string;
@@ -43,9 +43,9 @@ const ChatWidget: React.FC = () => {
       // or we can pass it. The API expects history + current message separately usually,
       // or we can pass all. The service implementation takes history and new message separately.
       const history = messages.map(m => ({ sender: m.sender, text: m.text }));
-      
+
       const botText = await sendChatMessage(history, userText);
-      
+
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
@@ -54,10 +54,10 @@ const ChatWidget: React.FC = () => {
       setMessages(prev => [...prev, botMsg]);
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages(prev => [...prev, { 
-        id: Date.now().toString(), 
-        sender: 'bot', 
-        text: "Oops! My recipe book is stuck. Can you ask that again?" 
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        sender: 'bot',
+        text: "Oops! My recipe book is stuck. Can you ask that again?"
       }]);
     } finally {
       setIsLoading(false);
@@ -92,12 +92,11 @@ const ChatWidget: React.FC = () => {
           <div className="flex-1 overflow-y-auto p-4 bg-rose-50/50 space-y-3 scrollbar-hide">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div 
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
-                    msg.sender === 'user' 
-                      ? 'bg-rose-500 text-white rounded-tr-none' 
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm ${msg.sender === 'user'
+                      ? 'bg-rose-500 text-white rounded-tr-none'
                       : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
-                  }`}
+                    }`}
                 >
                   {msg.text}
                 </div>
@@ -128,7 +127,7 @@ const ChatWidget: React.FC = () => {
                 placeholder="Type a message..."
                 className="flex-1 bg-transparent border-none focus:ring-0 text-sm outline-none"
               />
-              <button 
+              <button
                 onClick={handleSendMessage}
                 disabled={isLoading || !inputText.trim()}
                 className="text-rose-500 hover:text-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

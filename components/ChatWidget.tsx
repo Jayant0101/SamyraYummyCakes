@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Loader2, Cake } from 'lucide-react';
-import { createBakeryChat } from '../services/gemini';
-import { Chat } from "@google/genai";
+import { sendChatMessage } from '../services/gemini';
 
 interface Message {
   id: string;
@@ -16,13 +15,7 @@ const ChatWidget: React.FC = () => {
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const chatRef = useRef<Chat | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Initialize chat session on mount
-    chatRef.current = createBakeryChat();
-  }, []);
 
   useEffect(() => {
     // Auto-scroll to bottom
@@ -32,12 +25,13 @@ const ChatWidget: React.FC = () => {
   }, [messages, isOpen]);
 
   const handleSendMessage = async () => {
-    if (!inputText.trim() || !chatRef.current) return;
+    if (!inputText.trim()) return;
 
+    const userText = inputText.trim();
     const userMsg: Message = {
       id: Date.now().toString(),
       sender: 'user',
-      text: inputText.trim()
+      text: userText
     };
 
     setMessages(prev => [...prev, userMsg]);
@@ -45,8 +39,12 @@ const ChatWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const result = await chatRef.current.sendMessage({ message: userMsg.text });
-      const botText = result.text || "I'm having a little trouble checking the oven. Please try again!";
+      // Send the conversation history (excluding the new message we just added visually, 
+      // or we can pass it. The API expects history + current message separately usually,
+      // or we can pass all. The service implementation takes history and new message separately.
+      const history = messages.map(m => ({ sender: m.sender, text: m.text }));
+      
+      const botText = await sendChatMessage(history, userText);
       
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -91,7 +89,7 @@ const ChatWidget: React.FC = () => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 bg-rose-50/50 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 bg-rose-50/50 space-y-3 scrollbar-hide">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div 

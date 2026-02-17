@@ -29,9 +29,10 @@ const CATEGORIES = ['Birthday', 'Wedding', 'Anniversary', 'Custom', 'Cupcakes', 
 // ─── Product Form Component ───
 const ProductForm: React.FC<{
     initial?: Product;
+    products: Product[]; // Add products prop to derive categories
     onSave: (data: ProductInput, imageFile?: File) => Promise<void>;
     onCancel: () => void;
-}> = ({ initial, onSave, onCancel }) => {
+}> = ({ initial, products, onSave, onCancel }) => {
     const [form, setForm] = useState<ProductInput>({
         name: initial?.name || '',
         category: initial?.category || 'Birthday',
@@ -44,6 +45,18 @@ const ProductForm: React.FC<{
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(initial?.image_url || null);
     const [saving, setSaving] = useState(false);
+
+    const [existingCategories, setExistingCategories] = useState<string[]>([]);
+
+    useEffect(() => {
+        // Extract unique categories from products
+        if (products.length > 0) {
+            const unique = Array.from(new Set(products.map(p => p.category))).sort();
+            setExistingCategories(unique);
+        } else {
+            setExistingCategories(['Birthday', 'Wedding', 'Anniversary', 'Custom', 'Cupcakes', 'Festival']);
+        }
+    }, [products]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -86,13 +99,21 @@ const ProductForm: React.FC<{
                 </div>
                 <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Category *</label>
-                    <select
-                        required value={form.category}
-                        onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none text-sm bg-white"
-                    >
-                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <div className="relative">
+                        <input
+                            type="text"
+                            required
+                            value={form.category}
+                            onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                            list="category-suggestions"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none text-sm"
+                            placeholder="Select or type new category..."
+                        />
+                        <datalist id="category-suggestions">
+                            {existingCategories.map(c => <option key={c} value={c} />)}
+                        </datalist>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Type a new name to create a new category</p>
                 </div>
             </div>
 
@@ -472,6 +493,7 @@ const AdminDashboard: React.FC = () => {
                             <div className="mb-6">
                                 <ProductForm
                                     initial={editingProduct || undefined}
+                                    products={products}
                                     onSave={handleSaveProduct}
                                     onCancel={() => { setShowForm(false); setEditingProduct(null); }}
                                 />

@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import { ShoppingBag, Loader2 } from 'lucide-react';
 import { getActiveProducts, Product } from '../services/productService';
 
-const categories = ['All', 'Birthday', 'Wedding', 'Anniversary', 'Custom', 'Cupcakes'];
-
 const Menu: React.FC = () => {
     const [activeCategory, setActiveCategory] = useState('All');
     const [products, setProducts] = useState<Product[]>([]);
@@ -22,9 +20,11 @@ const Menu: React.FC = () => {
 
     const filtered = activeCategory === 'All' ? products : products.filter(c => c.category === activeCategory);
 
-    // Get unique categories from products + defaults
-    const dynamicCategories = ['All', ...new Set(products.map(p => p.category))];
-    const allCategories = [...new Set([...dynamicCategories, ...categories])];
+    // Get unique categories from products
+    const dynamicCategories = ['All', ...new Set(products.map(p => p.category))].sort();
+
+    // Fallback if no products (shouldn't happen due to defaults, but good for safety)
+    const displayCategories = dynamicCategories.length > 1 ? dynamicCategories : ['All', 'Birthday', 'Wedding', 'Anniversary', 'Custom'];
 
     return (
         <div className="min-h-screen bg-rose-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -38,7 +38,7 @@ const Menu: React.FC = () => {
 
                 {/* Category Filter */}
                 <div className="flex flex-wrap justify-center gap-3 mb-12">
-                    {allCategories.map(cat => (
+                    {displayCategories.map(cat => (
                         <button
                             key={cat}
                             onClick={() => setActiveCategory(cat)}

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { generateCakeConcept, generateCakeImage } from '../services/api';
 import { AIConcept } from '../types';
-import { Sparkles, Loader2, Image as ImageIcon, RotateCw } from 'lucide-react';
+import { Sparkles, Loader2, Image as ImageIcon, RotateCw, ShoppingBag } from 'lucide-react';
 
 const AIChef: React.FC = () => {
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [concept, setConcept] = useState<AIConcept | null>(null);
@@ -41,6 +43,16 @@ const AIChef: React.FC = () => {
     } finally {
       setImageLoading(false);
     }
+  };
+
+  const handleOrderThisCake = () => {
+    // Navigate to a simplified order form with AI data pre-filled
+    navigate('/order', {
+      state: {
+        aiConcept: concept,
+        aiImageUrl: generatedImage,
+      }
+    });
   };
 
   return (
@@ -118,14 +130,13 @@ const AIChef: React.FC = () => {
                   </button>
                 )}
 
-                <a
-                  href={`https://wa.me/919876543210?text=I used your AI Chef and I want to order this concept: "${concept.name}" - ${concept.description}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 block text-center text-rose-600 font-bold hover:underline"
+                {/* Order This Cake → Navigates to simplified order form */}
+                <button
+                  onClick={handleOrderThisCake}
+                  className="mt-3 w-full flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-lg font-bold transition-colors shadow-lg"
                 >
-                  Order This Concept
-                </a>
+                  <ShoppingBag className="w-5 h-5" /> Order This Cake
+                </button>
               </div>
 
               <div className="md:w-1/2 bg-gray-100 min-h-[400px] flex items-center justify-center relative">

@@ -6,17 +6,42 @@
   body {
     @apply font-sans bg-rose-50 text-gray-900;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-serif;
   }
 }
 
 /* Custom utility for hiding scrollbar */
 .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
+
 .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth page transitions */
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Delay utilities for staggered animations */
+.delay-75 {
+  animation-delay: 75ms;
+}
+
+.delay-150 {
+  animation-delay: 150ms;
+}
+
+/* Focus improvements for accessibility */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-rose-500;
 }

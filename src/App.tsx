@@ -1,15 +1,12 @@
 import React, { Suspense, lazy } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar'; // Assumes existing component
-import Footer from './components/Footer'; // Assumes existing component
-import ChatWidget from './components/ChatWidget'; // Assumes existing component
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import ChatWidget from './components/ChatWidget';
 import ErrorBoundary from './components/ErrorBoundary';
+import Home from './pages/Home';
 
-// Lazy load pages for performance
-const Home = lazy(() => import('./pages/Home'));
-const Menu = lazy(() => import('./pages/Menu'));
-const CustomOrder = lazy(() => import('./pages/CustomOrder'));
-const Contact = lazy(() => import('./pages/Contact'));
+// Lazy load AIChef for performance
 const AIChef = lazy(() => import('./pages/AIChef'));
 
 // Loading fallback component
@@ -38,9 +35,6 @@ const App: React.FC = () => {
                         <Suspense fallback={<PageLoader />}>
                             <Routes>
                                 <Route path="/" element={<Home />} />
-                                <Route path="/menu" element={<Menu />} />
-                                <Route path="/order" element={<CustomOrder />} />
-                                <Route path="/contact" element={<Contact />} />
                                 <Route path="/ai-chef" element={<AIChef />} />
                             </Routes>
                         </Suspense>

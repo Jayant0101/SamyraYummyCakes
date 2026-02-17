@@ -185,6 +185,20 @@ const AdminDashboard: React.FC = () => {
                                             {order.owner_notes && <div className="col-span-2"><span className="text-gray-500">Notes:</span> <span className="text-amber-700 font-bold">{order.owner_notes}</span></div>}
                                         </div>
 
+                                        {/* Reference Image */}
+                                        {order.reference_image_url && (
+                                            <div className="bg-gray-50 rounded-lg p-4">
+                                                <p className="font-bold text-gray-700 mb-2 text-sm">📸 Customer Reference Image</p>
+                                                <a href={order.reference_image_url} target="_blank" rel="noreferrer">
+                                                    <img
+                                                        src={order.reference_image_url}
+                                                        alt="Customer reference"
+                                                        className="rounded-lg w-full max-w-sm border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer"
+                                                    />
+                                                </a>
+                                            </div>
+                                        )}
+
                                         {/* AI Concept if available */}
                                         {order.ai_concept && (
                                             <div className="bg-purple-50 rounded-lg p-4">

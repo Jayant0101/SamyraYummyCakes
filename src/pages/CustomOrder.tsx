@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Loader2, CheckCircle, Upload, MessageCircle } from 'lucide-react';
+import { Send, Loader2, CheckCircle, Upload, MessageCircle, X, Image as ImageIcon } from 'lucide-react';
 import { createOrder } from '../services/orderService';
+import { uploadOrderImage } from '../services/storageService';
 
 const flavors = ['Chocolate Truffle', 'Red Velvet', 'Vanilla', 'Butterscotch', 'Strawberry', 'Pineapple', 'Black Forest', 'Mango', 'Rose & Pistachio', 'Other'];
 const occasions = ['Birthday', 'Wedding', 'Anniversary', 'Baby Shower', 'Corporate Event', 'Festival', 'Other'];
@@ -12,6 +13,9 @@ const CustomOrder: React.FC = () => {
     const [submitted, setSubmitted] = useState(false);
     const [orderId, setOrderId] = useState('');
     const [loading, setLoading] = useState(false);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [uploadProgress, setUploadProgress] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -26,10 +30,48 @@ const CustomOrder: React.FC = () => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image must be less than 5MB');
+            return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please upload an image file');
+            return;
+        }
+
+        setImageFile(file);
+        const reader = new FileReader();
+        reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+        reader.readAsDataURL(file);
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
         try {
+            let imageUrl: string | undefined;
+
+            // Upload image if selected
+            if (imageFile) {
+                setUploadProgress('Uploading image...');
+                imageUrl = await uploadOrderImage(imageFile);
+            }
+
+            setUploadProgress('Placing order...');
+
             const order = await createOrder({
                 customer_name: formData.name,
                 customer_phone: formData.phone,
@@ -38,6 +80,7 @@ const CustomOrder: React.FC = () => {
                 cake_weight: formData.weight,
                 occasion: formData.occasion,
                 details: formData.details,
+                reference_image_url: imageUrl,
             });
             setOrderId(order.id);
             setSubmitted(true);
@@ -46,6 +89,7 @@ const CustomOrder: React.FC = () => {
             alert('Failed to submit order. Please try again.');
         } finally {
             setLoading(false);
+            setUploadProgress('');
         }
     };
 
@@ -60,6 +104,7 @@ const CustomOrder: React.FC = () => {
                     </div>
                     <h2 className="font-serif text-3xl font-bold text-gray-900 mb-2">Order Placed! 🎉</h2>
                     <p className="text-gray-600 mb-2">Your order has been submitted successfully.</p>
+                    {imageFile && <p className="text-green-600 text-sm mb-2">✅ Reference image uploaded!</p>}
                     <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 my-6">
                         <p className="text-sm text-gray-600 mb-1">Your Order ID</p>
                         <p className="text-2xl font-bold text-rose-600 font-mono tracking-wider">{orderId}</p>
@@ -72,7 +117,7 @@ const CustomOrder: React.FC = () => {
                             rel="noreferrer"
                             className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full font-bold transition-colors"
                         >
-                            <MessageCircle className="w-5 h-5" /> Confirm on WhatsApp
+                            <MessageCircle className="w-5 h-5" /> Chat on WhatsApp
                         </a>
                         <button
                             onClick={() => navigate('/track-order')}
@@ -160,13 +205,36 @@ const CustomOrder: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Design Reference */}
+                    {/* Design Reference Image Upload */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-800 mb-2">Design Reference (Optional)</label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-rose-400 transition-colors">
-                            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-500">Upload a reference image or share via WhatsApp after placing order</p>
-                        </div>
+                        <label className="block text-sm font-bold text-gray-800 mb-2">Design Reference Image (Optional)</label>
+                        {imagePreview ? (
+                            <div className="relative rounded-lg overflow-hidden border-2 border-rose-200">
+                                <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={removeImage}
+                                    className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-3 py-1.5">
+                                    {imageFile?.name} ({(imageFile!.size / 1024).toFixed(0)} KB)
+                                </div>
+                            </div>
+                        ) : (
+                            <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-rose-400 transition-colors cursor-pointer block">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="hidden"
+                                />
+                                <ImageIcon className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                                <p className="text-sm font-medium text-gray-600">Click to upload a reference image</p>
+                                <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+                            </label>
+                        )}
                     </div>
 
                     {/* Additional Details */}
@@ -184,7 +252,11 @@ const CustomOrder: React.FC = () => {
                         type="submit" disabled={loading}
                         className="w-full bg-rose-500 hover:bg-rose-600 text-white py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-rose-200"
                     >
-                        {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting...</> : <><Send className="w-5 h-5" /> Place Order</>}
+                        {loading ? (
+                            <><Loader2 className="w-5 h-5 animate-spin" /> {uploadProgress || 'Submitting...'}</>
+                        ) : (
+                            <><Send className="w-5 h-5" /> Place Order</>
+                        )}
                     </button>
                 </form>
             </div>

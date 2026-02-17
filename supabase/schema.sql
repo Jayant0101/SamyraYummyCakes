@@ -1,4 +1,4 @@
--- Samyra's Yummy Cakes - Orders Table
+-- Samyra's Yummy Cakes - Orders Table & Storage
 -- Run this in Supabase SQL Editor (Dashboard → SQL Editor → New Query)
 
 -- Create orders table

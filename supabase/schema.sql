@@ -63,3 +63,35 @@ CREATE TRIGGER orders_updated_at
   BEFORE UPDATE ON orders
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
+
+-- ═══════════════════════════════════════════
+-- PRODUCTS TABLE
+-- ═══════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS products (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  price_range TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  image_url TEXT NOT NULL DEFAULT '',
+  is_active BOOLEAN DEFAULT true,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view products" ON products FOR SELECT USING (true);
+CREATE POLICY "Anyone can create products" ON products FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can update products" ON products FOR UPDATE USING (true);
+CREATE POLICY "Anyone can delete products" ON products FOR DELETE USING (true);
+
+CREATE INDEX idx_products_category ON products (category);
+CREATE INDEX idx_products_active ON products (is_active);
+
+CREATE TRIGGER products_updated_at
+  BEFORE UPDATE ON products
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at();

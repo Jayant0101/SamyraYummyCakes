@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { getAllOrders, updateOrderStatus, deleteOrder } from '../services/orderService';
+import { getAllProducts, createProduct, updateProduct, deleteProduct, uploadProductImage, Product, ProductInput } from '../services/productService';
 import { Order, OrderStatus } from '../types';
-import { Lock, LogOut, Package, CheckCircle, ChefHat, Truck, Gift, Trash2, Phone, Clock, MessageSquare, Filter, RefreshCw } from 'lucide-react';
+import { Lock, LogOut, Package, CheckCircle, ChefHat, Truck, Gift, Trash2, Phone, Clock, MessageSquare, Filter, RefreshCw, Plus, Edit2, X, Save, Image as ImageIcon, Eye, EyeOff, Cake } from 'lucide-react';
 
-const ADMIN_PASSWORD = 'samyra2024'; // Simple password – replace with Supabase Auth for production
+const ADMIN_PASSWORD = 'samyra2024';
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
     pending: { label: 'Pending', color: 'text-yellow-700', bg: 'bg-yellow-100', icon: <Package className="w-4 h-4" /> },
@@ -23,24 +24,195 @@ const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
     out_for_delivery: 'delivered',
 };
 
+const CATEGORIES = ['Birthday', 'Wedding', 'Anniversary', 'Custom', 'Cupcakes', 'Festival'];
+
+// ─── Product Form Component ───
+const ProductForm: React.FC<{
+    initial?: Product;
+    onSave: (data: ProductInput, imageFile?: File) => Promise<void>;
+    onCancel: () => void;
+}> = ({ initial, onSave, onCancel }) => {
+    const [form, setForm] = useState<ProductInput>({
+        name: initial?.name || '',
+        category: initial?.category || 'Birthday',
+        price_range: initial?.price_range || '',
+        description: initial?.description || '',
+        image_url: initial?.image_url || '',
+        is_active: initial?.is_active ?? true,
+        sort_order: initial?.sort_order ?? 0,
+    });
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(initial?.image_url || null);
+    const [saving, setSaving] = useState(false);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { alert('Max 5MB'); return; }
+        setImageFile(file);
+        const reader = new FileReader();
+        reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+        reader.readAsDataURL(file);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            await onSave(form, imageFile || undefined);
+        } catch (err) {
+            alert('Failed to save product');
+            console.error(err);
+        }
+        setSaving(false);
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+            <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-lg text-gray-900">{initial ? 'Edit Product' : '✨ Add New Product'}</h3>
+                <button type="button" onClick={onCancel} className="p-1 text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Product Name *</label>
+                    <input
+                        type="text" required value={form.name}
+                        onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none text-sm"
+                        placeholder="e.g., Chocolate Truffle Cake"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Category *</label>
+                    <select
+                        required value={form.category}
+                        onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none text-sm bg-white"
+                    >
+                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Price Range *</label>
+                    <input
+                        type="text" required value={form.price_range}
+                        onChange={e => setForm(f => ({ ...f, price_range: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none text-sm"
+                        placeholder="e.g., ₹800 - ₹2,500"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Sort Order</label>
+                    <input
+                        type="number" value={form.sort_order}
+                        onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none text-sm"
+                    />
+                </div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Description *</label>
+                <textarea
+                    required value={form.description} rows={2}
+                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none text-sm resize-none"
+                    placeholder="Short description of the cake..."
+                />
+            </div>
+
+            {/* Image Upload */}
+            <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Product Image *</label>
+                {imagePreview ? (
+                    <div className="relative w-48 h-32 rounded-lg overflow-hidden border border-gray-200">
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                            type="button"
+                            onClick={() => { setImageFile(null); setImagePreview(null); setForm(f => ({ ...f, image_url: '' })); }}
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
+                        >
+                            <X className="w-3 h-3" />
+                        </button>
+                    </div>
+                ) : (
+                    <label className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-rose-400 transition-colors cursor-pointer block">
+                        <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                        <ImageIcon className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500">Click to upload image</p>
+                        <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
+                    </label>
+                )}
+            </div>
+
+            {/* Active Toggle */}
+            <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                    type="checkbox"
+                    checked={form.is_active}
+                    onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
+                    className="w-4 h-4 text-rose-500"
+                />
+                <span className="text-sm text-gray-700">Active (visible in menu)</span>
+            </label>
+
+            <div className="flex gap-3 pt-2">
+                <button
+                    type="submit" disabled={saving || (!form.image_url && !imageFile)}
+                    className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-6 py-2 rounded-lg font-bold text-sm transition-colors disabled:opacity-50"
+                >
+                    {saving ? <><span className="animate-spin">⏳</span> Saving...</> : <><Save className="w-4 h-4" /> {initial ? 'Update' : 'Add Product'}</>}
+                </button>
+                <button type="button" onClick={onCancel} className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium">Cancel</button>
+            </div>
+        </form>
+    );
+};
+
+// ─── Main Admin Dashboard ───
 const AdminDashboard: React.FC = () => {
     const [authed, setAuthed] = useState(false);
     const [password, setPassword] = useState('');
+    const [activeTab, setActiveTab] = useState<'orders' | 'products'>('orders');
+
+    // Orders state
     const [orders, setOrders] = useState<Order[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+    const [orderLoading, setOrderLoading] = useState(false);
+    const [orderFilter, setOrderFilter] = useState<OrderStatus | 'all'>('all');
     const [noteInput, setNoteInput] = useState<Record<string, string>>({});
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
+    // Products state
+    const [products, setProducts] = useState<Product[]>([]);
+    const [productLoading, setProductLoading] = useState(false);
+    const [showForm, setShowForm] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+    // --- Loaders ---
     const loadOrders = async () => {
-        setLoading(true);
+        setOrderLoading(true);
         const data = await getAllOrders();
         setOrders(data);
-        setLoading(false);
+        setOrderLoading(false);
+    };
+
+    const loadProducts = async () => {
+        setProductLoading(true);
+        const data = await getAllProducts();
+        setProducts(data);
+        setProductLoading(false);
     };
 
     useEffect(() => {
-        if (authed) loadOrders();
+        if (authed) {
+            loadOrders();
+            loadProducts();
+        }
     }, [authed]);
 
     const handleLogin = (e: React.FormEvent) => {
@@ -49,6 +221,7 @@ const AdminDashboard: React.FC = () => {
         else alert('Incorrect password');
     };
 
+    // --- Order handlers ---
     const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
         const note = noteInput[orderId] || undefined;
         await updateOrderStatus(orderId, newStatus, note);
@@ -56,20 +229,45 @@ const AdminDashboard: React.FC = () => {
         loadOrders();
     };
 
-    const handleDelete = async (orderId: string) => {
-        if (!confirm('Are you sure you want to delete this order?')) return;
+    const handleDeleteOrder = async (orderId: string) => {
+        if (!confirm('Delete this order?')) return;
         await deleteOrder(orderId);
         loadOrders();
     };
 
-    const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
+    // --- Product handlers ---
+    const handleSaveProduct = async (data: ProductInput, imageFile?: File) => {
+        let imageUrl = data.image_url;
+        if (imageFile) {
+            imageUrl = await uploadProductImage(imageFile);
+        }
 
-    const statusCounts = orders.reduce((acc, o) => {
-        acc[o.status] = (acc[o.status] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
+        if (editingProduct) {
+            await updateProduct(editingProduct.id, { ...data, image_url: imageUrl });
+        } else {
+            await createProduct({ ...data, image_url: imageUrl });
+        }
 
-    // Login Screen
+        setShowForm(false);
+        setEditingProduct(null);
+        loadProducts();
+    };
+
+    const handleDeleteProduct = async (id: string) => {
+        if (!confirm('Delete this product?')) return;
+        await deleteProduct(id);
+        loadProducts();
+    };
+
+    const handleToggleActive = async (product: Product) => {
+        await updateProduct(product.id, { is_active: !product.is_active });
+        loadProducts();
+    };
+
+    const filteredOrders = orderFilter === 'all' ? orders : orders.filter(o => o.status === orderFilter);
+    const statusCounts = orders.reduce((acc, o) => { acc[o.status] = (acc[o.status] || 0) + 1; return acc; }, {} as Record<string, number>);
+
+    // ─── Login ───
     if (!authed) {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
@@ -78,17 +276,13 @@ const AdminDashboard: React.FC = () => {
                         <Lock className="w-8 h-8 text-rose-500" />
                     </div>
                     <h2 className="font-serif text-2xl font-bold text-gray-900 mb-2">Admin Dashboard</h2>
-                    <p className="text-gray-500 mb-6 text-sm">Enter the admin password to manage orders.</p>
+                    <p className="text-gray-500 mb-6 text-sm">Enter the admin password to manage orders & products.</p>
                     <input
-                        type="password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
+                        type="password" value={password} onChange={e => setPassword(e.target.value)}
                         placeholder="Password"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none mb-4"
                     />
-                    <button type="submit" className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-lg font-bold transition-colors">
-                        Login
-                    </button>
+                    <button type="submit" className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-lg font-bold transition-colors">Login</button>
                 </form>
             </div>
         );
@@ -98,10 +292,10 @@ const AdminDashboard: React.FC = () => {
         <div className="min-h-screen bg-gray-100">
             {/* Top Bar */}
             <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                <h1 className="font-serif text-2xl font-bold text-gray-900">🧁 Order Dashboard</h1>
+                <h1 className="font-serif text-2xl font-bold text-gray-900">🧁 Admin Dashboard</h1>
                 <div className="flex items-center gap-3">
-                    <button onClick={loadOrders} className="p-2 text-gray-500 hover:text-rose-500 transition-colors" title="Refresh">
-                        <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                    <button onClick={() => { loadOrders(); loadProducts(); }} className="p-2 text-gray-500 hover:text-rose-500 transition-colors" title="Refresh">
+                        <RefreshCw className={`w-5 h-5 ${orderLoading || productLoading ? 'animate-spin' : ''}`} />
                     </button>
                     <button onClick={() => setAuthed(false)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-500 transition-colors">
                         <LogOut className="w-4 h-4" /> Logout
@@ -109,155 +303,240 @@ const AdminDashboard: React.FC = () => {
                 </div>
             </div>
 
-            <div className="px-4 sm:px-6 py-6 max-w-7xl mx-auto">
-                {/* Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
-                    {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-                        <button
-                            key={key}
-                            onClick={() => setFilter(key as OrderStatus)}
-                            className={`${cfg.bg} rounded-xl p-3 text-center transition-all hover:shadow-md ${filter === key ? 'ring-2 ring-offset-1 ring-rose-400' : ''}`}
-                        >
-                            <div className={`text-2xl font-bold ${cfg.color}`}>{statusCounts[key] || 0}</div>
-                            <div className={`text-xs font-medium ${cfg.color}`}>{cfg.label}</div>
-                        </button>
-                    ))}
-                </div>
-
-                {/* Filter Bar */}
-                <div className="flex items-center gap-2 mb-4">
-                    <Filter className="w-4 h-4 text-gray-500" />
-                    <button onClick={() => setFilter('all')} className={`text-sm px-3 py-1 rounded-full ${filter === 'all' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 border'}`}>
-                        All ({orders.length})
+            {/* Tab Bar */}
+            <div className="bg-white border-b border-gray-200 px-4 sm:px-6">
+                <div className="flex gap-1 max-w-7xl mx-auto">
+                    <button
+                        onClick={() => setActiveTab('orders')}
+                        className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'orders' ? 'text-rose-600 border-rose-500' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
+                    >
+                        <Package className="w-4 h-4 inline mr-2" />Orders ({orders.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('products')}
+                        className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'products' ? 'text-rose-600 border-rose-500' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
+                    >
+                        <Cake className="w-4 h-4 inline mr-2" />Products ({products.length})
                     </button>
                 </div>
+            </div>
 
-                {/* Orders List */}
-                {filtered.length === 0 && (
-                    <div className="bg-white rounded-xl p-12 text-center text-gray-400">
-                        <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg">No orders found</p>
-                    </div>
-                )}
+            <div className="px-4 sm:px-6 py-6 max-w-7xl mx-auto">
 
-                <div className="space-y-4">
-                    {filtered.map(order => {
-                        const cfg = STATUS_CONFIG[order.status];
-                        const next = NEXT_STATUS[order.status];
-                        const isExpanded = expandedId === order.id;
-
-                        return (
-                            <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                                {/* Order Row */}
-                                <div
-                                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer"
-                                    onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                {/* ═══════ ORDERS TAB ═══════ */}
+                {activeTab === 'orders' && (
+                    <>
+                        {/* Status Stats */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+                            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setOrderFilter(key as OrderStatus)}
+                                    className={`${cfg.bg} rounded-xl p-3 text-center transition-all hover:shadow-md ${orderFilter === key ? 'ring-2 ring-offset-1 ring-rose-400' : ''}`}
                                 >
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <span className="font-mono font-bold text-rose-600 text-sm">{order.id}</span>
-                                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${cfg.bg} ${cfg.color}`}>
-                                                {cfg.icon} {cfg.label}
-                                            </span>
-                                        </div>
-                                        <p className="font-bold text-gray-900">{order.customer_name}</p>
-                                        <p className="text-sm text-gray-500">{order.cake_flavor} · {order.cake_weight} · {order.occasion}</p>
-                                    </div>
+                                    <div className={`text-2xl font-bold ${cfg.color}`}>{statusCounts[key] || 0}</div>
+                                    <div className={`text-xs font-medium ${cfg.color}`}>{cfg.label}</div>
+                                </button>
+                            ))}
+                        </div>
 
-                                    <div className="flex items-center gap-3 text-sm text-gray-500">
-                                        <div className="flex items-center gap-1">
-                                            <Clock className="w-3.5 h-3.5" />
-                                            {new Date(order.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                                        </div>
-                                        <a href={`tel:${order.customer_phone}`} onClick={e => e.stopPropagation()} className="p-2 hover:bg-green-50 rounded-full">
-                                            <Phone className="w-4 h-4 text-green-600" />
-                                        </a>
-                                    </div>
-                                </div>
+                        <div className="flex items-center gap-2 mb-4">
+                            <Filter className="w-4 h-4 text-gray-500" />
+                            <button onClick={() => setOrderFilter('all')} className={`text-sm px-3 py-1 rounded-full ${orderFilter === 'all' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 border'}`}>
+                                All ({orders.length})
+                            </button>
+                        </div>
 
-                                {/* Expanded Detail */}
-                                {isExpanded && (
-                                    <div className="px-4 sm:px-5 pb-5 border-t border-gray-100 pt-4 space-y-4">
-                                        <div className="grid grid-cols-2 gap-3 text-sm">
-                                            <div><span className="text-gray-500">Phone:</span> <span className="font-bold text-gray-900">{order.customer_phone}</span></div>
-                                            <div><span className="text-gray-500">Event Date:</span> <span className="font-bold text-gray-900">{order.event_date}</span></div>
-                                            {order.details && <div className="col-span-2"><span className="text-gray-500">Details:</span> <span className="text-gray-900">{order.details}</span></div>}
-                                            {order.owner_notes && <div className="col-span-2"><span className="text-gray-500">Notes:</span> <span className="text-amber-700 font-bold">{order.owner_notes}</span></div>}
+                        {filteredOrders.length === 0 && (
+                            <div className="bg-white rounded-xl p-12 text-center text-gray-400">
+                                <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                <p className="text-lg">No orders found</p>
+                            </div>
+                        )}
+
+                        <div className="space-y-4">
+                            {filteredOrders.map(order => {
+                                const cfg = STATUS_CONFIG[order.status];
+                                const next = NEXT_STATUS[order.status];
+                                const isExpanded = expandedId === order.id;
+
+                                return (
+                                    <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                                        <div
+                                            className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer"
+                                            onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                                        >
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <span className="font-mono font-bold text-rose-600 text-sm">{order.id}</span>
+                                                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${cfg.bg} ${cfg.color}`}>
+                                                        {cfg.icon} {cfg.label}
+                                                    </span>
+                                                </div>
+                                                <p className="font-bold text-gray-900">{order.customer_name}</p>
+                                                <p className="text-sm text-gray-500">{order.cake_flavor} · {order.cake_weight} · {order.occasion}</p>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-sm text-gray-500">
+                                                <div className="flex items-center gap-1">
+                                                    <Clock className="w-3.5 h-3.5" />
+                                                    {new Date(order.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                                </div>
+                                                <a href={`tel:${order.customer_phone}`} onClick={e => e.stopPropagation()} className="p-2 hover:bg-green-50 rounded-full">
+                                                    <Phone className="w-4 h-4 text-green-600" />
+                                                </a>
+                                            </div>
                                         </div>
 
-                                        {/* Reference Image */}
-                                        {order.reference_image_url && (
-                                            <div className="bg-gray-50 rounded-lg p-4">
-                                                <p className="font-bold text-gray-700 mb-2 text-sm">📸 Customer Reference Image</p>
-                                                <a href={order.reference_image_url} target="_blank" rel="noreferrer">
-                                                    <img
-                                                        src={order.reference_image_url}
-                                                        alt="Customer reference"
-                                                        className="rounded-lg w-full max-w-sm border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer"
+                                        {isExpanded && (
+                                            <div className="px-4 sm:px-5 pb-5 border-t border-gray-100 pt-4 space-y-4">
+                                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                                    <div><span className="text-gray-500">Phone:</span> <span className="font-bold text-gray-900">{order.customer_phone}</span></div>
+                                                    <div><span className="text-gray-500">Event:</span> <span className="font-bold text-gray-900">{order.event_date}</span></div>
+                                                    {order.details && <div className="col-span-2"><span className="text-gray-500">Details:</span> <span className="text-gray-900">{order.details}</span></div>}
+                                                    {order.owner_notes && <div className="col-span-2"><span className="text-gray-500">Notes:</span> <span className="text-amber-700 font-bold">{order.owner_notes}</span></div>}
+                                                </div>
+
+                                                {order.reference_image_url && (
+                                                    <div className="bg-gray-50 rounded-lg p-4">
+                                                        <p className="font-bold text-gray-700 mb-2 text-sm">📸 Customer Reference Image</p>
+                                                        <a href={order.reference_image_url} target="_blank" rel="noreferrer">
+                                                            <img src={order.reference_image_url} alt="Reference" className="rounded-lg w-full max-w-sm border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer" />
+                                                        </a>
+                                                    </div>
+                                                )}
+
+                                                {order.ai_concept && (
+                                                    <div className="bg-purple-50 rounded-lg p-4">
+                                                        <p className="font-bold text-purple-800 mb-1">🤖 AI Design: {order.ai_concept.name}</p>
+                                                        <p className="text-purple-700 text-sm">{order.ai_concept.description}</p>
+                                                        {order.ai_image_url && <img src={order.ai_image_url} alt="AI Design" className="mt-2 rounded-lg w-full max-w-xs" />}
+                                                    </div>
+                                                )}
+
+                                                <div className="flex flex-col sm:flex-row gap-3">
+                                                    <input
+                                                        type="text"
+                                                        value={noteInput[order.id] || ''}
+                                                        onChange={e => setNoteInput(prev => ({ ...prev, [order.id]: e.target.value }))}
+                                                        placeholder="Add note for customer"
+                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-400 outline-none"
+                                                        onClick={e => e.stopPropagation()}
                                                     />
+                                                    <div className="flex gap-2">
+                                                        {next && (
+                                                            <button onClick={() => handleStatusChange(order.id, next)} className="flex items-center gap-1 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+                                                                Move to {STATUS_CONFIG[next].label}
+                                                            </button>
+                                                        )}
+                                                        {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                                                            <button onClick={() => handleStatusChange(order.id, 'cancelled')} className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg text-sm font-bold">Cancel</button>
+                                                        )}
+                                                        <button onClick={() => handleDeleteOrder(order.id)} className="p-2 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                                    </div>
+                                                </div>
+
+                                                <a
+                                                    href={`https://wa.me/${order.customer_phone.replace(/[^0-9]/g, '')}?text=Hi ${order.customer_name}! Update on order ${order.id}: ${STATUS_CONFIG[order.status].label}. ${noteInput[order.id] || ''}`}
+                                                    target="_blank" rel="noreferrer"
+                                                    className="inline-flex items-center gap-2 text-sm text-green-600 font-bold hover:underline"
+                                                >
+                                                    <MessageSquare className="w-4 h-4" /> Send WhatsApp Update
                                                 </a>
                                             </div>
                                         )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
 
-                                        {/* AI Concept if available */}
-                                        {order.ai_concept && (
-                                            <div className="bg-purple-50 rounded-lg p-4">
-                                                <p className="font-bold text-purple-800 mb-1">🤖 AI Design: {order.ai_concept.name}</p>
-                                                <p className="text-purple-700 text-sm">{order.ai_concept.description}</p>
-                                                {order.ai_image_url && (
-                                                    <img src={order.ai_image_url} alt="AI Design" className="mt-2 rounded-lg w-full max-w-xs" />
-                                                )}
+                {/* ═══════ PRODUCTS TAB ═══════ */}
+                {activeTab === 'products' && (
+                    <>
+                        {/* Add Product Button */}
+                        <div className="flex items-center justify-between mb-6">
+                            <p className="text-gray-500 text-sm">{products.length} products · Changes update the Menu page in real-time</p>
+                            {!showForm && !editingProduct && (
+                                <button
+                                    onClick={() => { setShowForm(true); setEditingProduct(null); }}
+                                    className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-md"
+                                >
+                                    <Plus className="w-4 h-4" /> Add Product
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Add/Edit Form */}
+                        {(showForm || editingProduct) && (
+                            <div className="mb-6">
+                                <ProductForm
+                                    initial={editingProduct || undefined}
+                                    onSave={handleSaveProduct}
+                                    onCancel={() => { setShowForm(false); setEditingProduct(null); }}
+                                />
+                            </div>
+                        )}
+
+                        {/* Products Grid */}
+                        {productLoading ? (
+                            <div className="flex justify-center py-12">
+                                <RefreshCw className="w-8 h-8 text-rose-500 animate-spin" />
+                            </div>
+                        ) : products.length === 0 ? (
+                            <div className="bg-white rounded-xl p-12 text-center text-gray-400">
+                                <Cake className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                <p className="text-lg mb-2">No products yet</p>
+                                <p className="text-sm">Click "Add Product" to create your first menu item</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {products.map(product => (
+                                    <div key={product.id} className={`bg-white rounded-xl shadow-sm border overflow-hidden transition-all hover:shadow-md ${!product.is_active ? 'opacity-60' : ''}`}>
+                                        <div className="relative h-40 overflow-hidden bg-gray-100">
+                                            {product.image_url ? (
+                                                <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="flex items-center justify-center h-full text-gray-300"><ImageIcon className="w-10 h-10" /></div>
+                                            )}
+                                            <div className="absolute top-2 left-2 flex gap-1">
+                                                <span className="bg-white/90 px-2 py-0.5 rounded-full text-xs font-bold text-rose-600">{product.category}</span>
                                             </div>
-                                        )}
-
-                                        {/* Action Area */}
-                                        <div className="flex flex-col sm:flex-row gap-3">
-                                            <input
-                                                type="text"
-                                                value={noteInput[order.id] || ''}
-                                                onChange={e => setNoteInput(prev => ({ ...prev, [order.id]: e.target.value }))}
-                                                placeholder="Add note for customer (optional)"
-                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-400 outline-none"
-                                                onClick={e => e.stopPropagation()}
-                                            />
-                                            <div className="flex gap-2">
-                                                {next && (
-                                                    <button
-                                                        onClick={() => handleStatusChange(order.id, next)}
-                                                        className="flex items-center gap-1 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                                                    >
-                                                        <MessageSquare className="w-4 h-4" /> Move to {STATUS_CONFIG[next].label}
-                                                    </button>
-                                                )}
-                                                {order.status !== 'cancelled' && order.status !== 'delivered' && (
-                                                    <button
-                                                        onClick={() => handleStatusChange(order.id, 'cancelled')}
-                                                        className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg text-sm font-bold transition-colors"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                )}
-                                                <button onClick={() => handleDelete(order.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
-                                                    <Trash2 className="w-4 h-4" />
+                                            {!product.is_active && (
+                                                <div className="absolute top-2 right-2 bg-gray-800/80 text-white px-2 py-0.5 rounded-full text-xs font-bold">Hidden</div>
+                                            )}
+                                        </div>
+                                        <div className="p-4">
+                                            <h4 className="font-bold text-gray-900 mb-1">{product.name}</h4>
+                                            <p className="text-gray-500 text-xs mb-2 line-clamp-2">{product.description}</p>
+                                            <p className="text-rose-600 font-bold text-sm mb-3">{product.price_range}</p>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => { setEditingProduct(product); setShowForm(false); }}
+                                                    className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+                                                >
+                                                    <Edit2 className="w-3.5 h-3.5" /> Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleToggleActive(product)}
+                                                    className={`flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${product.is_active ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'}`}
+                                                >
+                                                    {product.is_active ? <><EyeOff className="w-3.5 h-3.5" /> Hide</> : <><Eye className="w-3.5 h-3.5" /> Show</>}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteProduct(product.id)}
+                                                    className="flex items-center gap-1 text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors ml-auto"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
                                         </div>
-
-                                        {/* WhatsApp Quick Reply */}
-                                        <a
-                                            href={`https://wa.me/${order.customer_phone.replace(/[^0-9]/g, '')}?text=Hi ${order.customer_name}! Update on your order ${order.id}: ${STATUS_CONFIG[order.status].label}. ${noteInput[order.id] || ''}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center gap-2 text-sm text-green-600 font-bold hover:underline"
-                                        >
-                                            <MessageSquare className="w-4 h-4" /> Send WhatsApp Update
-                                        </a>
                                     </div>
-                                )}
+                                ))}
                             </div>
-                        );
-                    })}
-                </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

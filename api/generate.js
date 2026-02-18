@@ -1,17 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async function handler(req, res) {
-    // CORS configuration
-    const allowedOrigins = [
-        process.env.VITE_APP_URL || 'http://localhost:5173',
-        'http://localhost:4173'
-    ];
-
+    // CORS — allow same-origin and cross-origin requests
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
+    if (origin) {
         res.setHeader('Access-Control-Allow-Origin', origin);
     }
-
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
     res.setHeader(
@@ -42,7 +36,7 @@ export default async function handler(req, res) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const result = await model.generateContent(prompt);
         const response = await result.response;

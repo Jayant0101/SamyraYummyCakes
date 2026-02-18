@@ -1,10 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async function handler(req, res) {
-    // CORS
-    const allowedOrigins = [process.env.VITE_APP_URL || 'http://localhost:5173', 'http://localhost:4173'];
+    // CORS — allow same-origin and cross-origin requests
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
+    if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 

@@ -1,10 +1,12 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async function handler(req, res) {
-    // CORS
-    const allowedOrigins = [process.env.VITE_APP_URL || 'http://localhost:5173', 'http://localhost:4173'];
+    // CORS — allow same-origin (no origin header) and configured origins
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
+    if (origin) {
+        // Allow any origin on the same Vercel project, or configured app URL
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -20,7 +22,7 @@ export default async function handler(req, res) {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const chat = model.startChat({
-            history: history.map(h => ({
+            history: (history || []).map(h => ({
                 role: h.sender === 'user' ? 'user' : 'model',
                 parts: [{ text: h.text }]
             }))

@@ -1,7 +1,6 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-module.exports = async function handler(req, res) {
-    // CORS — allow same-origin and cross-origin requests
+export default async function handler(req, res) {
     const origin = req.headers.origin;
     if (origin) {
         res.setHeader('Access-Control-Allow-Origin', origin);
@@ -12,7 +11,7 @@ module.exports = async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'Missing API Key' });
 
     try {
@@ -35,4 +34,4 @@ module.exports = async function handler(req, res) {
         console.error('Chat Gen Error:', error);
         return res.status(500).json({ error: 'Failed to generate response' });
     }
-};
+}

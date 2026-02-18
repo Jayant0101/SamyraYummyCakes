@@ -1,7 +1,6 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-module.exports = async function handler(req, res) {
-    // CORS — allow same-origin and cross-origin requests
+export default async function handler(req, res) {
     const origin = req.headers.origin;
     if (origin) {
         res.setHeader('Access-Control-Allow-Origin', origin);
@@ -32,7 +31,6 @@ module.exports = async function handler(req, res) {
         const result = await model.generateContent([systemPrompt, `User Request: ${prompt}`]);
         const responseText = result.response.text();
 
-        // Clean up markdown code blocks if present
         const cleanedText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
         const concept = JSON.parse(cleanedText);
 
@@ -41,4 +39,4 @@ module.exports = async function handler(req, res) {
         console.error('Concept Gen Error:', error);
         return res.status(500).json({ error: 'Failed to generate concept' });
     }
-};
+}

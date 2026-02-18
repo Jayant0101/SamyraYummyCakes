@@ -34,22 +34,7 @@ const ScrollToTop = () => {
     return null;
 };
 
-// Layout wrapper — hides Navbar/Footer on Admin page
-const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const location = useLocation();
-    const isAdmin = location.pathname === '/admin';
-
-    if (isAdmin) return <>{children}</>;
-
-    return (
-        <div className="flex flex-col min-h-screen font-sans text-gray-900 relative bg-rose-50">
-            <Navbar />
-            <main className="flex-grow">{children}</main>
-            <ChatWidget />
-            <Footer />
-        </div>
-    );
-};
+import Layout from './components/Layout';
 
 const App: React.FC = () => {
     return (

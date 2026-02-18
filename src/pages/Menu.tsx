@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Loader2 } from 'lucide-react';
+import { ShoppingBag, Loader2, Filter } from 'lucide-react';
 import { getActiveProducts, Product } from '../services/productService';
+import GlassCard from '../components/GlassCard';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Menu: React.FC = () => {
     const [activeCategory, setActiveCategory] = useState('All');
@@ -20,99 +22,122 @@ const Menu: React.FC = () => {
 
     const filtered = activeCategory === 'All' ? products : products.filter(c => c.category === activeCategory);
 
-    // Get unique categories from products
+    // Get unique categories and sort
     const dynamicCategories = ['All', ...new Set(products.map(p => p.category))].sort();
-
-    // Fallback if no products (shouldn't happen due to defaults, but good for safety)
     const displayCategories = dynamicCategories.length > 1 ? dynamicCategories : ['All', 'Birthday', 'Wedding', 'Anniversary', 'Custom'];
 
     return (
-        <div className="min-h-screen bg-rose-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 relative">
+            {/* Background elements */}
+            <div className="fixed top-0 left-0 w-full h-full -z-10 bg-gradient-to-br from-rose-50 via-white to-amber-50" />
+
             <div className="max-w-7xl mx-auto">
-                {/* Header */}
                 <div className="text-center mb-12">
-                    <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">Our Menu & Gallery</h1>
-                    <p className="text-gray-600 text-lg max-w-2xl mx-auto">Explore our handcrafted collection. Every cake is made fresh with premium ingredients.</p>
-                    <div className="w-24 h-1 bg-rose-500 mx-auto mt-4 rounded-full"></div>
+                    <motion.h1
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="font-serif text-5xl font-bold text-gray-900 mb-4"
+                    >
+                        Menu & <span className="text-rose-500">Gallery</span>
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-gray-600 text-lg max-w-2xl mx-auto font-light"
+                    >
+                        Explore our handcrafted collection. Every cake is a masterpiece baked with love and premium ingredients.
+                    </motion.p>
                 </div>
 
-                {/* Category Filter */}
-                <div className="flex flex-wrap justify-center gap-3 mb-12">
-                    {displayCategories.map(cat => (
+                {/* Filter */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex flex-wrap justify-center gap-3 mb-16"
+                >
+                    {displayCategories.map((cat, idx) => (
                         <button
                             key={cat}
                             onClick={() => setActiveCategory(cat)}
-                            className={`px-6 py-2 rounded-full font-medium text-sm transition-all duration-300 ${activeCategory === cat
-                                ? 'bg-rose-500 text-white shadow-lg shadow-rose-200'
-                                : 'bg-white text-gray-700 hover:bg-rose-100 border border-gray-200'
+                            className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-300 ${activeCategory === cat
+                                ? 'bg-rose-500 text-white shadow-lg shadow-rose-200 scale-105'
+                                : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:text-rose-600 shadow-sm'
                                 }`}
                         >
                             {cat}
                         </button>
                     ))}
-                </div>
+                </motion.div>
 
-                {/* Loading */}
-                {loading && (
+                {loading ? (
                     <div className="flex justify-center py-20">
-                        <Loader2 className="w-10 h-10 text-rose-500 animate-spin" />
+                        <Loader2 className="w-12 h-12 text-rose-500 animate-spin" />
                     </div>
+                ) : (
+                    <motion.div
+                        layout
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+                    >
+                        <AnimatePresence>
+                            {filtered.map((cake, idx) => (
+                                <GlassCard
+                                    key={cake.id}
+                                    className="p-0 overflow-hidden group hover:shadow-2xl transition-all duration-500"
+                                    delay={idx * 0.1}
+                                >
+                                    <div className="relative h-64 overflow-hidden">
+                                        <img
+                                            src={cake.image_url}
+                                            alt={cake.name}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            loading="lazy"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-rose-600 shadow-sm">
+                                            {cake.category}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 relative">
+                                        <h3 className="font-serif text-2xl font-bold text-gray-900 mb-2 group-hover:text-rose-600 transition-colors">
+                                            {cake.name}
+                                        </h3>
+                                        <p className="text-gray-600 text-sm mb-6 leading-relaxed line-clamp-2">
+                                            {cake.description}
+                                        </p>
+
+                                        <div className="flex items-center justify-between mt-auto">
+                                            <span className="text-xl font-bold text-gray-900 font-serif">
+                                                {cake.price_range}
+                                            </span>
+                                            <Link
+                                                to="/order"
+                                                className="btn-primary px-6 py-2 text-sm flex items-center gap-2 shadow-none hover:shadow-lg"
+                                            >
+                                                <ShoppingBag className="w-4 h-4" /> Order
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </GlassCard>
+                            ))}
+                        </AnimatePresence>
+                    </motion.div>
                 )}
 
-                {/* Cake Grid */}
-                {!loading && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filtered.map(cake => (
-                            <div key={cake.id} className="bg-white rounded-2xl shadow-lg overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                                <div className="relative h-56 overflow-hidden">
-                                    <img
-                                        src={cake.image_url}
-                                        alt={cake.name}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-rose-600">
-                                        {cake.category}
-                                    </div>
-                                </div>
-                                <div className="p-6">
-                                    <h3 className="font-serif text-xl font-bold text-gray-900 mb-2">{cake.name}</h3>
-                                    <p className="text-gray-600 text-sm mb-3 leading-relaxed">{cake.description}</p>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-rose-600 font-bold text-lg">{cake.price_range}</span>
-                                        <Link
-                                            to="/order"
-                                            className="flex items-center gap-1 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
-                                        >
-                                            <ShoppingBag className="w-4 h-4" /> Order
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Empty state */}
                 {!loading && filtered.length === 0 && (
                     <div className="text-center py-20 text-gray-400">
-                        <p className="text-lg">No cakes in this category yet.</p>
+                        <p className="text-lg font-serif">No cakes found in this category.</p>
+                        <button
+                            onClick={() => setActiveCategory('All')}
+                            className="mt-4 text-rose-500 hover:underline"
+                        >
+                            View all cakes
+                        </button>
                     </div>
                 )}
-
-                {/* CTA */}
-                <div className="text-center mt-16">
-                    <div className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-10 text-white shadow-xl">
-                        <h2 className="font-serif text-3xl font-bold mb-3">Have a Unique Idea?</h2>
-                        <p className="text-rose-100 mb-6 text-lg">Let us bring your vision to life. Customize flavor, design, and size.</p>
-                        <Link
-                            to="/order"
-                            className="inline-block bg-white text-rose-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-lg"
-                        >
-                            Customize Your Cake
-                        </Link>
-                    </div>
-                </div>
             </div>
         </div>
     );

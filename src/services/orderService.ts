@@ -54,11 +54,20 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
 
 export const getOrdersByPhone = async (phone: string): Promise<Order[]> => {
     if (isSupabaseConfigured()) {
-        const { data, error } = await supabase.from('orders').select('*').eq('customer_phone', phone).order('created_at', { ascending: false });
+        // We try to match both exact phone and maybe variations if needed, but for now exact match is best for security/privacy.
+        // If users format differently, we might miss orders, but that's better than leaking.
+        // We could also try to strip spaces on the backend via a function, but standardizing input is easier.
+        const { data, error } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('customer_phone', phone)
+            .order('created_at', { ascending: false });
+
         if (error) return [];
         return data || [];
     }
     const orders = getLocalOrders();
+    // Local fallback: simple exact match
     return orders.filter(o => o.customer_phone === phone);
 };
 

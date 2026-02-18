@@ -4,7 +4,8 @@
 
 @layer base {
   body {
-    @apply font-sans bg-rose-50 text-gray-900;
+    @apply font-sans text-charcoal min-h-screen;
+    background: radial-gradient(circle at top left, #F6D6E6, #FAF7F2 60%);
   }
 
   h1,
@@ -13,26 +14,49 @@
   h4,
   h5,
   h6 {
-    @apply font-serif;
+    @apply font-serif text-charcoal;
   }
 }
 
-/* Custom utility for hiding scrollbar */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+/* Luxury Utilities */
+.glass-panel {
+  @apply bg-white/70 backdrop-blur-luxury border border-white/50 shadow-soft rounded-luxury;
 }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-rose-700;
+}
+
+.btn-primary {
+  @apply bg-rose-500 text-white px-8 py-3 rounded-full font-medium transition-all duration-300 hover:bg-rose-600 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0;
+}
+
+.btn-secondary {
+  @apply bg-white text-rose-600 border border-rose-200 px-8 py-3 rounded-full font-medium transition-all duration-300 hover:bg-rose-50 hover:border-rose-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0;
+}
+
+.btn-lux {
+  @apply px-6 py-3 rounded-full bg-blush text-charcoal shadow-soft hover:scale-105 transition-all duration-300 font-bold tracking-wide;
+}
+
+/* Custom Scrollbar for Luxury Feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-rose-200 rounded-full hover:bg-rose-300 transition-colors;
 }
 
 /* Smooth page transitions */
 .animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Delay utilities for staggered animations */
 .delay-75 {
   animation-delay: 75ms;
 }
@@ -41,7 +65,14 @@
   animation-delay: 150ms;
 }
 
-/* Focus improvements for accessibility */
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
 *:focus-visible {
-  @apply outline-2 outline-offset-2 outline-rose-500;
+  @apply outline-none ring-2 ring-rose-300 ring-offset-2;
 }

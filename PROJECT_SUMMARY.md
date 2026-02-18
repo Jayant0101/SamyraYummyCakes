@@ -92,7 +92,7 @@ Project Root/
 ├── tsconfig.json             # TypeScript configuration
 │
 ├── package.json              # Dependencies & npm scripts
-│                             # - npm run dev
+│                             # - npm run dev:all
 │                             # - npm run build
 │                             # - npm run lint
 │                             # - npm run preview
@@ -105,7 +105,7 @@ Project Root/
 │
 ├── .env.example              # Environment template
 │                             # - VITE_API_URL
-│                             # (GEMINI_API_KEY is server-side)
+│                             # (GOOGLE_API_KEY is server-side)
 │
 ├── .env.production           # Production env vars
 │
@@ -214,12 +214,12 @@ Display in ChatWidget
 **Development (.env.local):**
 ```
 VITE_API_URL=http://localhost:3000/api
-GEMINI_API_KEY=your_key_here
+GOOGLE_API_KEY=your_key_here
 ```
 
 **Production (Vercel Settings):**
 ```
-GEMINI_API_KEY=your_key_here
+GOOGLE_API_KEY=your_key_here
 VITE_API_URL=https://yourdomain.com/api (optional)
 ```
 
@@ -241,7 +241,7 @@ VITE_API_URL=https://yourdomain.com/api (optional)
 ## 🔐 Security Measures
 
 1. **API Key Protection**
-   - `GEMINI_API_KEY` stored server-side only
+   - `GOOGLE_API_KEY` stored server-side only
    - Never exposed to browser
    - Protected in Vercel environment variables
 
@@ -308,7 +308,7 @@ npx playwright test
 ### Immediate
 1. Copy this entire folder to your repo
 2. Run `npm install`
-3. Run `npm run dev`
+3. Run `npm run dev:all`
 4. Test locally
 
 ### Short Term

@@ -19,7 +19,7 @@ export default async function handler(req, res) {
         if (!prompt) return res.status(400).json({ error: 'Missing prompt' });
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const result = await model.generateContent(prompt);
         const text = result.response.text();

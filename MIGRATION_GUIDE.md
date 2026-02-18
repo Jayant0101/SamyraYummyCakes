@@ -39,7 +39,7 @@ cp -r scratch/samyrayummyCakes/* ./
 npm install
 
 # Test locally
-npm run dev
+npm run dev:all:all
 ```
 
 ### Option 2: Selective Migration
@@ -105,6 +105,7 @@ cp scratch/samyrayummyCakes/api/*.js ./api/
 cp scratch/samyrayummyCakes/.env.example ./
 mv .env.example .env.local
 # Edit .env.local with your API key
+# GOOGLE_API_KEY=...
 ```
 
 #### Step 6: Update index.html
@@ -170,13 +171,13 @@ const result = await generateCakeConcept(prompt);
 
 **OLD** (CRA):
 ```
-REACT_APP_GEMINI_API_KEY=sk-...
+GOOGLE_API_KEY=sk-...
 ```
 
 **NEW** (Vite):
 ```
 VITE_API_URL=http://localhost:3000/api
-GEMINI_API_KEY=sk-...  (server-side only)
+GOOGLE_API_KEY=sk-...  (server-side only)
 ```
 
 ### Example 4: Styling
@@ -252,7 +253,7 @@ fetch('http://localhost:3000/api/concept') // Or VITE_API_URL
 After migration, verify:
 
 - [ ] `npm install` succeeds without errors
-- [ ] `npm run dev` starts on http://localhost:5173
+- [ ] `npm run dev:all` starts on http://localhost:5173
 - [ ] Home page loads without errors
 - [ ] Navigation works (all routes)
 - [ ] Chat widget opens/closes
@@ -341,7 +342,7 @@ If you're new to these technologies:
 
 2. **Test thoroughly**
    ```bash
-   npm run dev
+   npm run dev:all
    # Test all pages, features, API calls
    ```
 

@@ -32,7 +32,7 @@ All core optimizations have been successfully implemented:
 
 ✅ **Environment Configuration**
 - `.env.example` template provided
-- Server-side: `GEMINI_API_KEY` (API only)
+- Server-side: `GOOGLE_API_KEY` (API only)
 - Client-side: `VITE_API_URL` (frontend)
 - Production env file: `.env.production`
 
@@ -56,8 +56,8 @@ cp .env.example .env.local
 
 Edit `.env.local` and add your Gemini API key:
 ```
-VITE_API_URL=http://localhost:3000/api
-GEMINI_API_KEY=your_actual_gemini_api_key_here
+VITE_API_URL=/api
+GOOGLE_API_KEY=your_actual_gemini_api_key_here
 ```
 
 **Get your Gemini API key:**
@@ -80,7 +80,7 @@ This installs:
 
 ### Step 3: Run Development Server
 ```bash
-npm run dev
+npm run dev:all
 ```
 
 **Output:**
@@ -162,7 +162,7 @@ git push -u origin main
 In Vercel Project Settings:
 1. Go to **Settings** > **Environment Variables**
 2. Add:
-   - **Key:** `GEMINI_API_KEY`
+   - **Key:** `GOOGLE_API_KEY`
    - **Value:** Your Gemini API key
    - **Environments:** Production, Preview, Development
 3. Click **Save**
@@ -233,7 +233,7 @@ samyrayummyCakes/
 ## 🔐 Security Improvements
 
 ✅ **API Key Protection**
-- `GEMINI_API_KEY` **server-side only** (not exposed to client)
+- `GOOGLE_API_KEY` **server-side only** (not exposed to client)
 - API functions act as middleware between frontend and Gemini
 - Client only knows `VITE_API_URL` (public)
 
@@ -295,19 +295,19 @@ npm run lint
 import { generateCakeConcept } from '@/services/api';
 ```
 
-### Issue: "GEMINI_API_KEY is undefined"
+### Issue: "GOOGLE_API_KEY is undefined"
 **Solution:** Check `.env.local` in project root (not `.env.example`). Vite only loads variables starting with `VITE_`.
 
 ### Issue: API returning 500 error
 **Solution:** 
-1. Check `GEMINI_API_KEY` is valid in Vercel settings
+1. Check `GOOGLE_API_KEY` is valid in Vercel settings
 2. Check Gemini API is enabled in Google Cloud Console
 3. Verify network request in browser DevTools
 
 ### Issue: CORS error in browser
 **Solution:** Ensure `VITE_API_URL` in `.env.local` matches your API origin:
 - Local: `http://localhost:3000/api` (if running API separately)
-- Or: `/api` (Vite proxy)
+- Or: `/api` (Vite proxy, default)
 
 ### Issue: Tailwind styles not applying
 **Solution:** Verify `tailwind.config.js` content paths:

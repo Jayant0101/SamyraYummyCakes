@@ -45,7 +45,7 @@ Comprehensive analysis of Samyra's Yummy Cakes project against modern React + Ty
 
 ### 3. Security Implementation
 - ✅ **API Key Protection**
-  - ✅ `GEMINI_API_KEY` **server-side only** (in `/api` functions)
+  - ✅ `GOOGLE_API_KEY` **server-side only** (in `/api` functions)
   - ✅ **Never** exported to client bundle
   - ✅ `.env.local` in `.gitignore` (assumed)
   
@@ -144,7 +144,7 @@ Comprehensive analysis of Samyra's Yummy Cakes project against modern React + Ty
   
 - ✅ **Environment Variables**
   - `VITE_API_URL` - Client-side (public)
-  - `GEMINI_API_KEY` - Server-side (secret)
+  - `GOOGLE_API_KEY` - Server-side (secret)
   - Properly namespaced (VITE_ prefix for client)
 
 ### 9. Deployment Readiness
@@ -277,7 +277,7 @@ All pinned to stable, recent versions. No deprecated packages.
 ### Manual Testing (Required)
 ```bash
 # 1. Local development
-npm run dev
+npm run dev:all
 # - Check http://localhost:5173 loads
 # - Test all page routes
 # - Open chat widget
@@ -362,7 +362,7 @@ lhci autorun
 
 ### Next Steps
 1. Copy entire folder to main repository
-2. Test locally (`npm install && npm run dev`)
+2. Test locally (`npm install && npm run dev:all`)
 3. Deploy to Vercel (connect GitHub)
 4. Monitor analytics dashboard
 5. Set up automated tests (optional)

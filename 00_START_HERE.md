@@ -36,8 +36,8 @@ A **modern, production-ready React application** for:
 ```bash
 npm install
 cp .env.example .env.local
-# Edit .env.local, add GEMINI_API_KEY from https://aistudio.google.com/apikey
-npm run dev
+# Edit .env.local, add GOOGLE_API_KEY from https://aistudio.google.com/apikey
+npm run dev:all
 # Open http://localhost:5173
 ```
 
@@ -51,7 +51,7 @@ cp -r C:\Users\jayant\.gemini\antigravity\scratch\samyrayummyCakes/* /your/repo/
 ### Option C: Deploy to Vercel
 1. Push to GitHub
 2. Import in Vercel dashboard
-3. Add `GEMINI_API_KEY` env var
+3. Add `GOOGLE_API_KEY` env var
 4. Deploy (automatic)
 
 ---
@@ -120,7 +120,7 @@ cp -r C:\Users\jayant\.gemini\antigravity\scratch\samyrayummyCakes/* /your/repo/
 
 ```bash
 # Start dev server
-npm run dev
+npm run dev:all
 
 # Build for production
 npm run build
@@ -143,8 +143,8 @@ curl -X POST http://localhost:3000/api/concept \
 
 Before deployment:
 - [ ] `.env.local` is in `.gitignore` (not committed)
-- [ ] `GEMINI_API_KEY` added to `.env.local` for local testing
-- [ ] `GEMINI_API_KEY` added to Vercel Project Settings
+- [ ] `GOOGLE_API_KEY` added to `.env.local` for local testing
+- [ ] `GOOGLE_API_KEY` added to Vercel Project Settings
 - [ ] No API keys in code comments
 - [ ] No secrets in git history
 
@@ -256,10 +256,10 @@ npm install
 
 # 2. Setup environment (1 min)
 cp .env.example .env.local
-# Edit .env.local, add GEMINI_API_KEY
+# Edit .env.local, add GOOGLE_API_KEY
 
 # 3. Run (30 sec)
-npm run dev
+npm run dev:all
 
 # 4. Test (2 min)
 # Open http://localhost:5173
@@ -278,7 +278,7 @@ npm run dev
 git push origin main
 # Then in Vercel dashboard:
 # - Import project
-# - Add GEMINI_API_KEY env var
+# - Add GOOGLE_API_KEY env var
 # - Deploy (automatic)
 ```
 

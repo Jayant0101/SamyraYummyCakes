@@ -10,8 +10,8 @@ cd C:\Users\jayant\.gemini\antigravity\scratch\samyrayummyCakes
 copy .env.example .env.local
 
 # Edit .env.local and add your Gemini API key:
-# VITE_API_URL=http://localhost:3000/api
-# GEMINI_API_KEY=your_key_here
+# VITE_API_URL=/api
+# GOOGLE_API_KEY=your_key_here
 ```
 
 **Get Gemini API Key:**
@@ -26,7 +26,7 @@ copy .env.example .env.local
 npm install
 
 # 4. Start development server
-npm run dev
+npm run dev:all
 ```
 
 **Output:**
@@ -66,7 +66,7 @@ git push origin main
 # 1. Go to https://vercel.com
 # 2. Click "Import Project"
 # 3. Select your GitHub repo
-# 4. Add GEMINI_API_KEY env var
+# 4. Add GOOGLE_API_KEY env var
 # 5. Click Deploy
 ```
 
@@ -92,7 +92,7 @@ api/
 ## 🛠️ Common Commands
 
 ```bash
-npm run dev          # Start dev server
+npm run dev:all          # Start dev server + API
 npm run build        # Production build
 npm run preview      # Test production build
 npm run lint         # Check code quality
@@ -104,7 +104,7 @@ npm run lint         # Check code quality
 |-------|----------|
 | Port 5173 in use | `npm run dev -- --port 3001` |
 | Module not found | `npm install` then restart dev |
-| GEMINI_API_KEY undefined | Add it to `.env.local` |
+| GOOGLE_API_KEY undefined | Add it to `.env.local` |
 | API 500 error | Check `.env.local` has valid key |
 
 ## 📖 Full Documentation

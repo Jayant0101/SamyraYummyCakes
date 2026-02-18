@@ -22,6 +22,14 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     css: true,
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     rollupOptions: {
       output: {

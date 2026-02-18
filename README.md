@@ -20,11 +20,12 @@ cp .env.example .env.local
 
 # Edit .env.local and add your Gemini API key
 # Get key: https://aistudio.google.com/apikey
+# Note: Variable name must be GOOGLE_API_KEY
 ```
 
 ### 2. Run
 ```bash
-npm run dev
+npm run dev:all
 ```
 Open http://localhost:5173 ✨
 
@@ -108,7 +109,7 @@ samyrayummyCakes/
 
 ## 🔒 Security
 
-- ✅ **API Key Protection** - `GEMINI_API_KEY` server-side only
+- ✅ **API Key Protection** - `GOOGLE_API_KEY` server-side only
 - ✅ **CORS Headers** - Whitelist specific origins
 - ✅ **Input Validation** - Validate all requests
 - ✅ **Error Handling** - Safe error messages
@@ -132,7 +133,7 @@ samyrayummyCakes/
 ## 🛠️ Available Scripts
 
 ```bash
-npm run dev       # Start development server (http://localhost:5173)
+npm run dev:all       # Start development server + API (http://localhost:5173)
 npm run build     # Production build (creates dist/)
 npm run preview   # Preview production build locally
 npm run lint      # Lint code with ESLint
@@ -145,14 +146,14 @@ npm run lint      # Lint code with ESLint
 ### Local Development
 ```bash
 npm install
-npm run dev
+npm run dev:all
 # Open http://localhost:5173
 ```
 
 ### Vercel (Recommended)
 1. Push code to GitHub
 2. Import project in [Vercel](https://vercel.com)
-3. Add `GEMINI_API_KEY` to Environment Variables
+3. Add `GOOGLE_API_KEY` to Environment Variables
 4. Click Deploy → Live in 2 minutes! 🚀
 
 ### Other Platforms
@@ -166,13 +167,13 @@ npm run dev
 
 ### Development (.env.local)
 ```
-VITE_API_URL=http://localhost:3000/api
-GEMINI_API_KEY=your_actual_key_here
+VITE_API_URL=/api
+GOOGLE_API_KEY=your_actual_key_here
 ```
 
 ### Production (Vercel Settings)
 ```
-GEMINI_API_KEY=your_actual_key_here
+GOOGLE_API_KEY=your_actual_key_here
 ```
 
 **Get Gemini API Key:**
@@ -205,7 +206,7 @@ npx playwright test  # E2E tests (if added)
 ## 🆘 Troubleshooting
 
 **Build fails:** Run `npm install` and try again  
-**API 500 error:** Check `GEMINI_API_KEY` is valid  
+**API 500 error:** Check `GOOGLE_API_KEY` is valid  
 **Styles not applying:** Verify Tailwind config paths  
 **Module not found:** Use `@/` alias (e.g., `@/components/Button`)
 

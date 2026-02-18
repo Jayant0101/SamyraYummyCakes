@@ -22,7 +22,7 @@ I have successfully refactored the application to align with the Mobile-First Lu
 The build has passed successfully (`npm run build`).
 You can preview the new design by running:
 ```bash
-npm run dev
+npm run dev:all
 ```
 
 Enjoy the new look! 🎂

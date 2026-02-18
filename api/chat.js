@@ -1,10 +1,9 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-export default async function handler(req, res) {
-    // CORS — allow same-origin (no origin header) and configured origins
+module.exports = async function handler(req, res) {
+    // CORS — allow same-origin and cross-origin requests
     const origin = req.headers.origin;
     if (origin) {
-        // Allow any origin on the same Vercel project, or configured app URL
         res.setHeader('Access-Control-Allow-Origin', origin);
     }
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -36,4 +35,4 @@ export default async function handler(req, res) {
         console.error('Chat Gen Error:', error);
         return res.status(500).json({ error: 'Failed to generate response' });
     }
-}
+};

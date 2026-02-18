@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // CORS — allow same-origin and cross-origin requests
     const origin = req.headers.origin;
     if (origin) {
@@ -13,4 +13,4 @@ export default async function handler(req, res) {
     const MOCK_IMAGE = "https://images.unsplash.com/photo-1535254973040-607b474cb50d?auto=format&fit=crop&w=800&q=80";
 
     return res.status(200).json({ image: MOCK_IMAGE });
-}
+};
